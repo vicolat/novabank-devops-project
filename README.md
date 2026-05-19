@@ -1,0 +1,1 @@
+CI/CD TEST: NovaBank pipeline is working 🚀
