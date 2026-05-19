@@ -1,19 +1,11 @@
 const pino = require("pino");
 
-const isProd = process.env.NODE_ENV === "production";
-
-module.exports = pino({
-  level: isProd ? "info" : "debug",
-  base: {
-    service: "novabank-backend",
-  },
-  timestamp: pino.stdTimeFunctions.isoTime,
-  transport: !isProd
-    ? {
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-        },
-      }
-    : undefined,
+const logger = pino({
+  level: process.env.NODE_ENV === "production" ? "info" : "debug",
+  transport:
+    process.env.NODE_ENV !== "production"
+      ? { target: "pino-pretty" }
+      : undefined,
 });
+
+module.exports = logger;
