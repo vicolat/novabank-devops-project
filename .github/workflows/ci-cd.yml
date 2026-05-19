@@ -12,30 +12,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build backend image
+      - name: Build & Push Backend
         run: |
-          docker build -t novabank-backend ./backend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/novabank-backend ./backend
+          docker push ${{ secrets.DOCKER_USERNAME }}/novabank-backend
 
-      - name: Build frontend image
+      - name: Build & Push Frontend
         run: |
-          docker build -t novabank-frontend ./frontend
-
-      - name: Run tests (optional placeholder)
-        run: echo "No tests yet - future step"
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/novabank-frontend ./frontend
+          docker push ${{ secrets.DOCKER_USERNAME }}/novabank-frontend
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy message
-        run: echo "Deploy step will connect to cloud server later"
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd novabank-devops-project
+            git pull origin main
+            sudo docker compose down
+            sudo docker compose up -d --build
