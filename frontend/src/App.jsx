@@ -1,38 +1,33 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import Login from "./login.jsx";
 
 function App() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loggedIn, setLoggedIn] = useState(false);
+
+  // 🔐 REAL AUTH CHECK (NOT FAKE STATE)
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    fetch("http://localhost:5000/users")
+    if (!token) return;
+
+    fetch("http://52.204.78.229/api/users", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
       .then((res) => res.json())
       .then((data) => {
         setUsers(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [token]);
 
-  // LOGIN SCREEN
-  if (!loggedIn) {
-    return (
-      <div className="login-page">
-        <div className="login-box">
-          <h1>NovaBank</h1>
-          <p>Secure Digital Banking</p>
-
-          <input placeholder="Email" />
-          <input type="password" placeholder="Password" />
-
-          <button onClick={() => setLoggedIn(true)}>
-            Login
-          </button>
-        </div>
-      </div>
-    );
+  // 🔐 LOGIN GATE
+  if (!token) {
+    return <Login />;
   }
 
   // DASHBOARD
@@ -58,7 +53,12 @@ function App() {
         <header className="topbar">
           <h3>Banking Dashboard</h3>
 
-          <button onClick={() => setLoggedIn(false)}>
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              window.location.reload();
+            }}
+          >
             Logout
           </button>
         </header>
