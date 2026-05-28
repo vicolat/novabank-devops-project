@@ -1,20 +1,26 @@
 const express = require("express");
-const router = express.Router();
-const db = require("../config/db");
+const auth = require("../middleware/authMiddleware");
+const User = require("../models/User");
 
-// TEST route first (safe)
-router.get("/", async (req, res) => {
+const router = express.Router();
+
+/* ========================
+   PROTECTED ROUTE
+======================== */
+router.get("/", auth, async (req, res) => {
   try {
-    res.status(200).json({
+    const users = await User.findAll({
+      attributes: ["id", "email"],
+    });
+
+    res.json({
       success: true,
       message: "Users fetched successfully",
-      data: []
+      data: users,
+      requestedBy: req.user,
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
